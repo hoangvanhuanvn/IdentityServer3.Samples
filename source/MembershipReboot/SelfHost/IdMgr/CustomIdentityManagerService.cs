@@ -1,4 +1,5 @@
-﻿using SelfHost.MR;
+﻿using IdentityManager.MembershipReboot;
+using SelfHost.MR;
 /*
  * Copyright 2014 Dominick Baier, Brock Allen
  *
@@ -14,11 +15,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Web;
-using Thinktecture.IdentityManager.MembershipReboot;
 
 namespace SelfHost.IdMgr
 {

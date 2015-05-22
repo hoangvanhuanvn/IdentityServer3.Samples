@@ -1,4 +1,5 @@
-﻿using Microsoft.Owin.Security.Facebook;
+﻿using IdentityManager.Configuration;
+using Microsoft.Owin.Security.Facebook;
 using Microsoft.Owin.Security.Google;
 using Microsoft.Owin.Security.Twitter;
 /*
@@ -17,10 +18,10 @@ using Microsoft.Owin.Security.Twitter;
  * limitations under the License.
  */
 using Owin;
-using SelfHost.IdSvr;
-using Thinktecture.IdentityManager.Configuration;
-using Thinktecture.IdentityServer.Core.Configuration;
 using SelfHost.IdMgr;
+using SelfHost.IdSvr;
+using Thinktecture.IdentityServer.Core.Configuration;
+using AuthenticationOptions = Thinktecture.IdentityServer.Core.Configuration.AuthenticationOptions;
 
 namespace SelfHost
 {
@@ -41,24 +42,28 @@ namespace SelfHost
                 });
             });
 
-
-            var idSvrFactory = Factory.Configure();
-            idSvrFactory.ConfigureCustomUserService(connectionString);
-
-            var options = new IdentityServerOptions
+            app.Map("/id", idApp =>
             {
-                IssuerUri = "https://idsrv3.com",
-                SiteName = "Thinktecture IdentityServer3 - UserService-MembershipReboot",
-                
-                SigningCertificate = Certificate.Get(),
-                Factory = idSvrFactory,
-                CorsPolicy = CorsPolicy.AllowAll,
-                AuthenticationOptions = new AuthenticationOptions{
-                    IdentityProviders = ConfigureAdditionalIdentityProviders,
-                }
-            };
+                var idSvrFactory = Factory.Configure();
+                idSvrFactory.ConfigureCustomUserService(connectionString);
 
-            app.UseIdentityServer(options);
+                var options = new IdentityServerOptions
+                {
+                    IssuerUri = "https://idsrv3.com",
+                    SiteName = "Thinktecture IdentityServer3 - UserService-MembershipReboot",
+
+                    SigningCertificate = Certificate.Get(),
+                    Factory = idSvrFactory,
+                    CorsPolicy = CorsPolicy.AllowAll,
+
+                    AuthenticationOptions = new AuthenticationOptions
+                    {
+                        IdentityProviders = ConfigureAdditionalIdentityProviders,
+                    }
+                };
+
+                idApp.UseIdentityServer(options);
+            });
         }
 
         public static void ConfigureAdditionalIdentityProviders(IAppBuilder app, string signInAsType)
