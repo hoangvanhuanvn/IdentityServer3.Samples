@@ -44,7 +44,7 @@ namespace SelfHost
 
             app.Map("/id", idApp =>
             {
-                var idSvrFactory = Factory.Configure();
+                var idSvrFactory = Factory.Configure(connectionString);
                 idSvrFactory.ConfigureCustomUserService(connectionString);
 
                 var options = new IdentityServerOptions
@@ -55,6 +55,7 @@ namespace SelfHost
                     SigningCertificate = Certificate.Get(),
                     Factory = idSvrFactory,
                     CorsPolicy = CorsPolicy.AllowAll,
+                    RequireSsl = false,
 
                     AuthenticationOptions = new AuthenticationOptions
                     {
