@@ -13,7 +13,7 @@ namespace Api
         {
             app.UseIdentityServerBearerTokenAuthentication(new IdentityServerBearerTokenAuthenticationOptions
             {
-                Authority = "https://localhost:44319/identity",
+                Authority = "http://localhost:44319/identity",
                 RequiredScopes = new[] { "sampleApi" }
             });
 

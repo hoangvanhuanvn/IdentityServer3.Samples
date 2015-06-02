@@ -32,24 +32,22 @@ namespace EmbeddedMvc
             AntiForgeryConfig.UniqueClaimTypeIdentifier = Constants.ClaimTypes.Subject;
             JwtSecurityTokenHandler.InboundClaimTypeMap = new Dictionary<string, string>();
 
-            app.Map("/identity", idsrvApp =>
+            app.Map("/identity", idsrvApp => idsrvApp.UseIdentityServer(new IdentityServerOptions
+            {
+                SiteName = "Embedded IdentityServer",
+                SigningCertificate = LoadCertificate(),
+
+                Factory = InMemoryFactory.Create(
+                    users: Users.Get(),
+                    clients: Clients.Get(),
+                    scopes: Scopes.Get()),
+
+                AuthenticationOptions = new Thinktecture.IdentityServer.Core.Configuration.AuthenticationOptions
                 {
-                    idsrvApp.UseIdentityServer(new IdentityServerOptions
-                    {
-                        SiteName = "Embedded IdentityServer",
-                        SigningCertificate = LoadCertificate(),
-
-                        Factory = InMemoryFactory.Create(
-                            users:   Users.Get(),
-                            clients: Clients.Get(),
-                            scopes:  Scopes.Get()),
-
-                        AuthenticationOptions = new Thinktecture.IdentityServer.Core.Configuration.AuthenticationOptions
-                        {
-                            IdentityProviders = ConfigureIdentityProviders
-                        }
-                    });
-                });
+                    IdentityProviders = ConfigureIdentityProviders
+                },
+                RequireSsl = false
+            }));
 
             app.UseResourceAuthorization(new AuthorizationManager());
 
@@ -61,12 +59,12 @@ namespace EmbeddedMvc
 
             app.UseOpenIdConnectAuthentication(new OpenIdConnectAuthenticationOptions
                 {
-                    Authority = "https://localhost:44319/identity",
+                    Authority = "http://localhost:44319/identity",
 
                     ClientId = "mvc",
                     Scope = "openid profile roles sampleApi",
                     ResponseType = "id_token token",
-                    RedirectUri = "https://localhost:44319/",
+                    RedirectUri = "http://localhost:44319/",
 
                     SignInAsAuthenticationType = "Cookies",
                     UseTokenLifetime = false,
@@ -105,18 +103,18 @@ namespace EmbeddedMvc
                                     n.AuthenticationTicket.Properties);
                             },
 
-                            RedirectToIdentityProvider = async n =>
+                        RedirectToIdentityProvider = async n =>
+                            {
+                                if (n.ProtocolMessage.RequestType == OpenIdConnectRequestType.LogoutRequest)
                                 {
-                                    if (n.ProtocolMessage.RequestType == OpenIdConnectRequestType.LogoutRequest)
-                                    {
-                                        var idTokenHint = n.OwinContext.Authentication.User.FindFirst("id_token");
+                                    var idTokenHint = n.OwinContext.Authentication.User.FindFirst("id_token");
 
-                                        if (idTokenHint != null)
-                                        {
-                                            n.ProtocolMessage.IdTokenHint = idTokenHint.Value;
-                                        }
+                                    if (idTokenHint != null)
+                                    {
+                                        n.ProtocolMessage.IdTokenHint = idTokenHint.Value;
                                     }
                                 }
+                            }
                     }
                 });
         }
